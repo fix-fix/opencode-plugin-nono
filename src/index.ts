@@ -10,6 +10,17 @@ import { classifyDenial, isBashFailure } from "./deny-classifier.js";
 const capabilityFileEnvVar = "NONO_CAP_FILE";
 const capabilities = loadCapabilities(capabilityFileEnvVar);
 
+const SUPPORTED_TOOLS = [
+  "bash",
+  "read",
+  "write",
+  "edit",
+  "patch",
+  "glob",
+  "grep",
+  "list",
+] as const;
+
 const nonoCapabilitiesTool = tool({
   description:
     "Show nono sandbox capabilities: allowed filesystem paths, network status, and workdir access.",
@@ -42,19 +53,25 @@ export const NonoPlugin: Plugin = async () => {
     "tool.execute.after": async (input, output) => {
       const toolName = typeof input.tool === "string" ? input.tool : "";
 
+      if (!SUPPORTED_TOOLS.includes(toolName as typeof SUPPORTED_TOOLS[number])) {
+        return;
+      }
+
+      let toolOutput: unknown = output.output;
+
       if (toolName === "bash") {
         const exitCode = output.metadata?.exit;
-        const toolOutput = output.output;
+        if (!isBashFailure(exitCode, toolOutput)) {
+          return;
+        }
+      }
 
-        if (isBashFailure(exitCode, toolOutput)) {
-          const classification = classifyDenial(
-            toolOutput,
-            toolName,
-            capabilities,
-          );
-          if (classification.isDenied && classification.suggestion) {
-            output.output = `${toolOutput}\n\n${classification.suggestion}`;
-          }
+      const classification = classifyDenial(toolOutput, toolName, capabilities);
+      if (classification.isDenied && classification.suggestion) {
+        if (typeof toolOutput === "string") {
+          output.output = `${toolOutput}\n\n${classification.suggestion}`;
+        } else {
+          output.output = `${JSON.stringify(toolOutput)}\n\n${classification.suggestion}`;
         }
       }
     },

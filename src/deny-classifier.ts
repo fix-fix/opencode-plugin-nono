@@ -1,15 +1,18 @@
 import type { NonoCapabilities } from "./types.js";
 
-const DENIAL_PATTERNS = [
+const ACCESS_DENIAL_PATTERNS = [
   /EACCES/,
   /EPERM/,
   /permission denied/i,
   /operation not permitted/i,
-  /EPERM/,
-  /sandbox/,
+  /sandbox/i,
   /access denied/i,
   /cannot access/i,
+];
+
+const ENOENT_PATTERNS = [
   /no such file or directory/i,
+  /ENOENT/,
 ];
 
 export interface DenyClassification {
@@ -25,11 +28,20 @@ export function classifyDenial(
 ): DenyClassification {
   const outputStr = typeof output === "string" ? output : JSON.stringify(output);
 
-  const matchedPattern = DENIAL_PATTERNS.find((pattern) =>
+  const accessMatch = ACCESS_DENIAL_PATTERNS.find((pattern) =>
+    pattern.test(outputStr)
+  );
+  const enoentMatch = ENOENT_PATTERNS.find((pattern) =>
     pattern.test(outputStr)
   );
 
+  const matchedPattern = accessMatch ?? enoentMatch;
+
   if (!matchedPattern) {
+    return { isDenied: false };
+  }
+
+  if (enoentMatch && !accessMatch) {
     return { isDenied: false };
   }
 
