@@ -59,11 +59,34 @@ export const NonoPlugin: Plugin = async () => {
       }
     },
     "experimental.chat.system.transform": async (_input, output) => {
+      const fsLines = capabilities.fs
+        .map((e) => `  ${e.path} (${e.access})`)
+        .join("\n");
+      const netStatus = capabilities.netBlocked ? "blocked" : "allowed";
+
       const lines = [
-        "Sandbox:",
-        `- ${sandboxNote}`,
-        "- if a tool is denied by sandbox, do not retry with workarounds",
-        "- suggest restarting with expanded nono allowlist (nono run --allow /path -- opencode)",
+        "## Nono Sandbox - CRITICAL",
+        "",
+        "**You are running inside the nono security sandbox.** This is a capability-based sandbox that CANNOT be bypassed or modified from within the session.",
+        "",
+        "### On ANY \"operation not permitted\" or \"EPERM\" error:",
+        "",
+        "**IMMEDIATELY tell the user:**",
+        "> This path is not accessible in the current nono sandbox session. You need to exit and restart with:",
+        "> `nono run --allow /path/to/needed -- opencode`",
+        "",
+        "**NEVER attempt:**",
+        "- Alternative file paths or locations",
+        "- Copying files to accessible directories",
+        "- Using sudo or permission changes",
+        "- Manual workarounds for the user to try",
+        "- ANY other approach besides restarting nono",
+        "",
+        "Allowed paths:",
+        fsLines || "  (none)",
+        `Network: ${netStatus}`,
+        "",
+        "The sandbox is a hard security boundary. Once applied, it cannot be expanded. The ONLY solution is to restart the session with additional --allow flags.",
       ];
       output.system.push(...lines);
     },

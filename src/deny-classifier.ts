@@ -35,8 +35,8 @@ export function classifyDenial(
 
   const allowedPaths =
     capabilities.loaded && capabilities.fs.length > 0
-      ? capabilities.fs.map((e) => `${e.path} [${e.access}]`).join(", ")
-      : "none";
+      ? capabilities.fs.map((e) => `  ${e.path} (${e.access})`).join("\n")
+      : "  (none)";
 
   const netStatus = capabilities.loaded
     ? capabilities.netBlocked
@@ -47,7 +47,29 @@ export function classifyDenial(
   return {
     isDenied: true,
     reason: `Operation denied: matched pattern "${matchedPattern.source}"`,
-    suggestion: `Sandbox is active. Allowed paths: ${allowedPaths}. Network: ${netStatus}. To allow this operation, restart with: nono run --allow /path/to/needed -- opencode`,
+    suggestion: `[NONO SANDBOX - PERMISSION DENIED]
+
+STOP. Do not try alternative approaches. This is a hard security boundary.
+
+You are running inside the nono security sandbox. The operation you just attempted is PERMANENTLY BLOCKED for this session. There is NO workaround possible from inside this session.
+
+ALLOWED PATHS (everything else is blocked):
+${allowedPaths}
+Network: ${netStatus}
+
+FORBIDDEN ACTIONS - DO NOT ATTEMPT:
+- Trying alternative file paths
+- Copying files to allowed locations
+- Using sudo or changing permissions
+- Suggesting the user run commands manually
+- Any other workaround
+
+REQUIRED ACTION:
+Tell the user they must EXIT this session and restart with the needed path:
+
+  nono run --allow /path/to/needed -- opencode
+
+This is the ONLY solution. The sandbox cannot be modified from within.`,
   };
 }
 

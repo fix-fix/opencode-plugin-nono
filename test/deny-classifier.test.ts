@@ -43,7 +43,7 @@ describe("deny-classifier", () => {
     it("detects EACCES permission denied", () => {
       const result = classifyDenial("bash: /etc/passwd: Permission denied (EACCES)", "bash", mockCapabilities);
       expect(result.isDenied).toBe(true);
-      expect(result.suggestion).toContain("Allowed paths:");
+      expect(result.suggestion).toContain("ALLOWED PATHS");
     });
 
     it("detects EPERM", () => {
