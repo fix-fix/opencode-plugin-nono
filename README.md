@@ -1,16 +1,18 @@
 # opencode-plugin-nono
 
-OpenCode plugin that integrates [nono](https://nono.sh) sandbox context and guidance.
+![AI Slop](https://img.shields.io/badge/AI-Slop-orange)
 
-## Features
+OpenCode plugin that integrates [nono](https://nono.sh) sandbox context and guidance into your AI agent sessions. This is the OpenCode equivalent of the [built-in Claude Code hook](https://github.com/always-further/nono/blob/main/crates/nono-cli/data/hooks/nono-hook.sh) that nono provides for Claude.
 
-- **Capability introspection**: Exposes a `nono_capabilities` tool to query sandbox permissions
-- **System prompt injection**: Injects sandbox status into the system prompt
-- **Denial detection**: Enriches tool failure messages with actionable guidance when operations are blocked by the sandbox
+## What it does
 
-## Installation
+With this plugin, when you run OpenCode inside the nono sandbox:
 
-### Via npm (published package)
+1. **Knows your sandbox limits** - The agent sees which paths are allowed and whether network access is blocked
+2. **Gets clear guidance on denials** - When a tool fails due to sandbox restrictions, the agent is told immediately that it's a hard boundary and how to fix it (restart with `--allow`)
+3. **Stops wasting time on workarounds** - No more trying alternative paths, copying files, or suggesting manual steps. The agent tells you to restart nono with the needed permissions
+
+## Quick Start
 
 Add to your `opencode.json`:
 
@@ -20,67 +22,37 @@ Add to your `opencode.json`:
 }
 ```
 
-## Usage
-
-The plugin automatically:
-
-1. Reads the nono capability file (default: `$NONO_CAP_FILE`)
-2. Exposes a `nono_capabilities` tool for querying sandbox state
-3. Injects sandbox context into the system prompt
-4. Enriches denied tool outputs with guidance on how to proceed
-
-### Tool: `nono_capabilities`
-
-Query sandbox capabilities:
-
-```
-> Use nono_capabilities tool
-```
-
-Returns filesystem paths and access levels, network status, and workdir access.
-
-### System Prompt
-
-The plugin injects a note like:
-
-```
-Sandbox:
-- [sandbox] nono sandbox active: allowed (read): /home/user, /tmp | network: allowed
-- if a tool is denied by sandbox, do not retry with workarounds
-- suggest restarting with expanded nono allowlist (nono run --allow /path -- opencode)
-```
-
-### Denial Handling
-
-When a tool fails due to sandbox restrictions, the error message is enriched with:
-
-- The matched denial pattern
-- Currently allowed filesystem paths
-- Network status
-- A suggestion to restart with expanded permissions
-
-## Development
+Run OpenCode inside nono:
 
 ```bash
-# Install dependencies
-npm install
-
-# Type check
-npm run typecheck
-
-# Build
-npm run build
-
-# Run tests
-npm test
+nono run --profile opencode -- opencode
 ```
 
-## Limitations
+Then on encountering an access error the agent won't try to work around it
+and instead will suggest a solution:
 
-- Sandbox boundaries are hard at runtime; the plugin cannot grant new access in-session
-- Failure interception is partial because throws can bypass the `tool.execute.after` hook
-- Error classification uses pattern matching and may not catch all denial cases
-- MCP/custom tools may emit different metadata formats
+```bash
+nono run --profile opencode -- opencode run 'Show the content of ~/.env file'
+
+✗ read failed
+Error: EACCES: permission denied, open '/home/username/.env'
+
+The `~/.env` file is not accessible in the current nono sandbox session due to permission restrictions. The sandbox only allows access to specific directories in your home folder, and `~/.env` is not among them.
+
+**To access this file, you would need to exit and restart the session with:**
+nono run --allow ~/.env -- opencode
+```
+
+## Requirements
+
+- [nono](https://nono.sh)
+
+The plugin detects automatically when running under nono (via `$NONO_CAP_FILE`).
+If not running under nono, it does nothing.
+
+## Supported tools
+
+Denial detection works for: `bash`, `read`, `write`, `edit`, `patch`, `glob`, `grep`, `list`.
 
 ## License
 
