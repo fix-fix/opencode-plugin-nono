@@ -1,0 +1,47 @@
+{
+  "name": "@fix-fix/opencode-plugin-nono",
+  "version": "0.1.0",
+  "description": "OpenCode plugin integrating nono sandbox context and guidance",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "clean": "rm -rf dist",
+    "prepublishOnly": "npm run clean && npm run build"
+  },
+  "keywords": [
+    "opencode",
+    "plugin",
+    "sandbox",
+    "nono"
+  ],
+  "author": "",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fix-fix/opencode-plugin-nono.git"
+  },
+  "bugs": {
+    "url": "https://github.com/fix-fix/opencode-plugin-nono/issues"
+  },
+  "homepage": "https://github.com/fix-fix/opencode-plugin-nono#readme",
+  "dependencies": {
+    "@opencode-ai/plugin": "^1.2.15"
+  },
+  "devDependencies": {
+    "@types/node": "^25.3.2",
+    "typescript": "^5.9.3"
+  }
+}
