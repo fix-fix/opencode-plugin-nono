@@ -3,8 +3,8 @@ import type { NonoCapabilities } from "./types.js";
 const DENIAL_PATTERNS = [
   /EACCES/,
   /EPERM/,
-  /permission denied/,
-  /operation not permitted/,
+  /permission denied/i,
+  /operation not permitted/i,
   /EPERM/,
   /sandbox/,
   /access denied/i,
