@@ -1,6 +1,6 @@
 {
   "name": "@fix-fix/opencode-plugin-nono",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "OpenCode plugin integrating nono sandbox context and guidance",
   "type": "module",
   "main": "./dist/index.js",
